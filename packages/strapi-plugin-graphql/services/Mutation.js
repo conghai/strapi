@@ -40,7 +40,16 @@ module.exports = {
     const queryName = `${action}${_.capitalize(name)}`;
 
     // Retrieve policies.
-    const policies = _.get(handler, `Mutation.${queryName}.policies`, []);
+    let policies = _.get(handler, `Mutation.${queryName}.policies`, []);
+    if(strapi.plugins.graphql.config.useRoutePolicy && _.isEmpty(policies)) {
+      const route = _.findLast(strapi.config.routes, r => {
+        return _.toLower(r.handler) === `${name}.${action}`;
+      });
+
+      if(_.isObject(route) && _.has(route, 'config.policies')) {
+        policies = route.config.policies;
+      }
+    }
 
     // Retrieve resolverOf.
     const resolverOf = _.get(handler, `Mutation.${queryName}.resolverOf`, '');
